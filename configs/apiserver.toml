@@ -1,2 +1,5 @@
 bind_addr = ":8080"
 log_level = "debug"
+
+[storage]
+database_url = "host=localhost dbname=store_api_db user=User password=123456 sslmode=disable"
