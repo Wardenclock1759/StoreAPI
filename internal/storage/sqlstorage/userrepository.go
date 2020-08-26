@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct {
@@ -27,6 +28,21 @@ func (r *UserRepository) Create(u *model.User) error {
 	)
 
 	return nil
+}
+
+func (r *UserRepository) FindByID(id uuid.UUID) (*model.User, error) {
+	u := &model.User{}
+	if err := r.storage.db.QueryRow(
+		"SELECT user_id, email, encrypted_password FROM \"user\" WHERE user_id = $1",
+		id,
+	).Scan(&u.ID, &u.Email, &u.EncryptedPassword); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	return u, nil
 }
 
 func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
