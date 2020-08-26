@@ -1,4 +1,4 @@
-package storage_test
+package sqlstorage_test
 
 import (
 	"os"
