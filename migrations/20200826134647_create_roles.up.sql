@@ -1,11 +1,11 @@
 CREATE TYPE user_role as ENUM (
-    `seller`
+    'seller'
 );
 
-CREATE TABLE user_roles (
-    user_id UUID NOT NULL REFERENCES user,
+CREATE TABLE "user_roles" (
+    user_id UUID NOT NULL REFERENCES "user",
     role user_role NOT NULL
 );
 
 CREATE INDEX user_roles_user
-    ON user_roles (user_id);
+    ON "user_roles" (user_id);

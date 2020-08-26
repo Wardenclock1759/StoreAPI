@@ -1,1 +1,1 @@
-DROP TABLE game;
+DROP TABLE "game";

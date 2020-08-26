@@ -1,6 +1,6 @@
 package apiserver
 
-import "github.com/Wardenclock1759/StoreAPI/storage"
+import "github.com/Wardenclock1759/StoreAPI/internal/storage"
 
 type Config struct {
 	BindAddress string `toml:"bind_addr"`

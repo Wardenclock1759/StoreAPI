@@ -1,7 +1,7 @@
 package apiserver
 
 import (
-	"github.com/Wardenclock1759/StoreAPI/storage"
+	"github.com/Wardenclock1759/StoreAPI/internal/storage"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io"
