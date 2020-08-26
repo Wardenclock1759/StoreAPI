@@ -3,6 +3,7 @@ package apiserver
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage/sqlstorage"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -48,6 +49,62 @@ func TestServer_HandleUserCreate(t *testing.T) {
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
 			req, _ := http.NewRequest(http.MethodPost, "/user", b)
+			s.ServeHTTP(rec, req)
+			assert.Equal(t, tc.expectedCode, rec.Code)
+		})
+	}
+}
+
+func TestServer_HandleSessionCreate(t *testing.T) {
+	databaseURL := "host=localhost dbname=store_api_db_test user=User password=123456 sslmode=disable"
+	db, _ := newDB(databaseURL)
+	storage := sqlstorage.New(db)
+	u := model.TestUser(t)
+	storage.User().Create(u)
+	s := newServer(storage)
+
+	testCases := []struct {
+		name         string
+		payload      interface{}
+		expectedCode int
+	}{
+		{
+			name: "valid",
+			payload: map[string]string{
+				"email":    u.Email,
+				"password": u.Password,
+			},
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "invalid",
+			payload:      "someString",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "invalid",
+			payload: map[string]string{
+				"email":    "someEmail",
+				"password": u.Password,
+			},
+			expectedCode: http.StatusUnauthorized,
+		},
+		{
+			name: "invalid",
+			payload: map[string]string{
+				"email":    u.Email,
+				"password": "123",
+			},
+			expectedCode: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			b := &bytes.Buffer{}
+			json.NewEncoder(b).Encode(tc.payload)
+			req, _ := http.NewRequest(http.MethodPost, "/session", b)
 			s.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})
