@@ -10,6 +10,7 @@ import (
 type Storage struct {
 	db             *sql.DB
 	userRepository *UserRepository
+	roleRepository *RoleRepository
 }
 
 func New(db *sql.DB) *Storage {
@@ -28,4 +29,16 @@ func (s *Storage) User() storage.UserRepository {
 	}
 
 	return s.userRepository
+}
+
+func (s *Storage) Role() storage.RoleRepository {
+	if s.roleRepository != nil {
+		return s.roleRepository
+	}
+
+	s.roleRepository = &RoleRepository{
+		storage: s,
+	}
+
+	return s.roleRepository
 }

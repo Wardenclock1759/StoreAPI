@@ -10,3 +10,9 @@ type UserRepository interface {
 	FindByEmail(string) (*model.User, error)
 	FindByID(uuid.UUID) (*model.User, error)
 }
+
+type RoleRepository interface {
+	GrantRole(*model.UserRole) error
+	RevokeRole(*model.UserRole) error
+	GetRolesByID(uuid.UUID) (*model.UserRole, error)
+}
