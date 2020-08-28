@@ -11,6 +11,8 @@ type Storage struct {
 	db             *sql.DB
 	userRepository *UserRepository
 	roleRepository *RoleRepository
+	gameRepository *GameRepository
+	keyRepository  *KeyRepository
 }
 
 func New(db *sql.DB) *Storage {
@@ -41,4 +43,28 @@ func (s *Storage) Role() storage.RoleRepository {
 	}
 
 	return s.roleRepository
+}
+
+func (s *Storage) Game() storage.GameRepository {
+	if s.gameRepository != nil {
+		return s.gameRepository
+	}
+
+	s.gameRepository = &GameRepository{
+		storage: s,
+	}
+
+	return s.gameRepository
+}
+
+func (s *Storage) Key() storage.KeyRepository {
+	if s.keyRepository != nil {
+		return s.keyRepository
+	}
+
+	s.keyRepository = &KeyRepository{
+		storage: s,
+	}
+
+	return s.keyRepository
 }

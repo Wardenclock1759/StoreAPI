@@ -16,3 +16,15 @@ type RoleRepository interface {
 	RevokeRole(*model.UserRole) error
 	GetRolesByID(uuid.UUID) (*model.UserRole, error)
 }
+
+type GameRepository interface {
+	Create(*model.Game) error
+	FindByName(string) (*model.Game, error)
+	FindByID(uuid.UUID) (*model.Game, error)
+}
+
+type KeyRepository interface {
+	Create(*model.Key) error
+	FindByGame(uuid.UUID) (*[]string, error)
+	FindByKey(string) (*model.Key, error)
+}
