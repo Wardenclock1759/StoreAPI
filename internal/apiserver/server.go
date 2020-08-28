@@ -25,6 +25,7 @@ var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
 	ErrFailedToGenerateToken    = errors.New("failed to generate token string")
 	ErrFailedDecodeToken        = errors.New("failed to decode token")
+	ErrForbidden                = errors.New("forbidden to proceed")
 	signedKey                   = []byte(os.Getenv("JWT_KEY"))
 )
 
@@ -69,6 +70,8 @@ func (s *server) configureRouter() {
 
 	seller := store.PathPrefix("/publisher").Subrouter()
 	seller.Use(s.authorisedSeller)
+	seller.HandleFunc("/game", s.handleGameCreate()).Methods("POST")
+	seller.HandleFunc("/key", s.handleKeyCreate()).Methods("POST")
 
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authorisedUser)
@@ -143,7 +146,7 @@ func (s *server) authorisedUser(next http.Handler) http.Handler {
 		id2, err2 := uuid.Parse(id)
 		u, err := s.storage.User().FindByID(id2)
 		if err != nil || err2 != nil {
-			s.error(w, r, http.StatusInternalServerError, ErrFailedDecodeToken)
+			s.error(w, r, http.StatusForbidden, ErrForbidden)
 			return
 		}
 
@@ -179,7 +182,7 @@ func (s *server) authorisedSeller(next http.Handler) http.Handler {
 
 		role, err := s.storage.Role().GetRolesByID(id2)
 		if role == nil || err != nil {
-			s.error(w, r, http.StatusForbidden, err)
+			s.error(w, r, http.StatusForbidden, ErrForbidden)
 			return
 		}
 
@@ -310,6 +313,60 @@ func (s *server) handleRevokeRole() http.HandlerFunc {
 			return
 		}
 		s.respond(w, r, http.StatusOK, role)
+	}
+}
+
+func (s *server) handleGameCreate() http.HandlerFunc {
+	type request struct {
+		Name  string    `json:"name"`
+		Price string    `json:"price"`
+		User  uuid.UUID `json:"user_id"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		g := &model.Game{
+			Name:  req.Name,
+			Price: req.Price,
+			User:  req.User.String(),
+		}
+		if err := s.storage.Game().Create(g); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusCreated, g)
+	}
+}
+
+func (s *server) handleKeyCreate() http.HandlerFunc {
+	type request struct {
+		ID  uuid.UUID `json:"game_id"`
+		Key string    `json:"code"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		k := &model.Key{
+			ID:  req.ID,
+			Key: req.Key,
+		}
+		if err := s.storage.Key().Create(k); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusCreated, k)
 	}
 }
 
