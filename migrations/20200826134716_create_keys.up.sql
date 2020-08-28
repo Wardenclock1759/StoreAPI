@@ -3,7 +3,6 @@ CREATE TABLE "game_code" (
     code varchar NOT NULL,
     addedAt time NOT NULL,
     soldAt time,
-    boughtBy UUID REFERENCES "user",
     primary key (game_id, code)
 );
 

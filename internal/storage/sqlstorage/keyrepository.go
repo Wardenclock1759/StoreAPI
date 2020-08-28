@@ -5,6 +5,7 @@ import (
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
 	"github.com/google/uuid"
+	"time"
 )
 
 type KeyRepository struct {
@@ -21,6 +22,18 @@ func (r *KeyRepository) Create(k *model.Key) error {
 		k.ID,
 		k.Key,
 		k.AddedAt,
+	)
+
+	return nil
+}
+
+func (r *KeyRepository) Delete(k *model.Key) error {
+
+	r.storage.db.QueryRow(
+		"UPDATE \"game_code\" SET soldat = $1 WHERE game_id = $2 AND code = $3",
+		time.Now(),
+		k.ID,
+		k.Key,
 	)
 
 	return nil
@@ -55,9 +68,9 @@ func (r *KeyRepository) FindByGame(id uuid.UUID) (*[]string, error) {
 func (r *KeyRepository) FindByKey(key string) (*model.Key, error) {
 	k := &model.Key{}
 	if err := r.storage.db.QueryRow(
-		"SELECT (game_id, code, addedat, removedat, boughtby) FROM \"game_code\" WHERE code = $1",
+		"SELECT (game_id, code, addedat, removedat) FROM \"game_code\" WHERE code = $1",
 		key,
-	).Scan(&k.ID, &k.Key, &k.AddedAt, &k.SoldAt, &k.BoughtBy); err != nil {
+	).Scan(&k.ID, &k.Key, &k.AddedAt, &k.SoldAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrRecordNotFound
 		}

@@ -72,6 +72,7 @@ func (s *server) configureRouter() {
 	seller.Use(s.authorisedSeller)
 	seller.HandleFunc("/game", s.handleGameCreate()).Methods("POST")
 	seller.HandleFunc("/key", s.handleKeyCreate()).Methods("POST")
+	seller.HandleFunc("/key", s.handleKeyDelete()).Methods("DELETE")
 
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authorisedUser)
@@ -341,6 +342,31 @@ func (s *server) handleGameCreate() http.HandlerFunc {
 		}
 
 		s.respond(w, r, http.StatusCreated, g)
+	}
+}
+
+func (s *server) handleKeyDelete() http.HandlerFunc {
+	type request struct {
+		ID  uuid.UUID `json:"game_id"`
+		Key string    `json:"code"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		k := &model.Key{
+			ID:  req.ID,
+			Key: req.Key,
+		}
+		if err := s.storage.Key().Delete(k); err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+		s.respond(w, r, http.StatusOK, nil)
 	}
 }
 

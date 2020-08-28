@@ -25,6 +25,7 @@ type GameRepository interface {
 
 type KeyRepository interface {
 	Create(*model.Key) error
+	Delete(*model.Key) error
 	FindByGame(uuid.UUID) (*[]string, error)
 	FindByKey(string) (*model.Key, error)
 }
