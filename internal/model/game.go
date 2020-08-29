@@ -9,7 +9,7 @@ import (
 type Game struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
-	User  string    `json:"user"`
+	User  uuid.UUID `json:"user"`
 	Price string    `json:"price"`
 }
 

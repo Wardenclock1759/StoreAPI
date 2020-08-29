@@ -39,30 +39,28 @@ func (r *KeyRepository) Delete(k *model.Key) error {
 	return nil
 }
 
-func (r *KeyRepository) FindByGame(id uuid.UUID) (*[]string, error) {
-	var keys []string
+func (r *KeyRepository) FindByGame(id uuid.UUID) (string, error) {
 	str := id.String()
+	code := ""
 
 	res, err := r.storage.db.Query(
-		"SELECT (code) FROM \"game_code\" WHERE game_id = $1",
+		"SELECT (code) FROM \"game_code\" WHERE game_id = $1 AND soldat is null LIMIT 1",
 		str,
 	)
 
 	defer res.Close()
-	var key string
+
 	for res.Next() {
-		err := res.Scan(&key)
-		if err != nil {
-			return nil, err
+		if err := res.Scan(&code); err != nil {
+			return "", err
 		}
-		keys = append(keys, key)
 	}
 
-	if err != nil {
-		return nil, err
+	if err != nil || code == "" {
+		return "", storage.ErrNoKeyFound
 	}
 
-	return &keys, nil
+	return code, nil
 }
 
 func (r *KeyRepository) FindByKey(key string) (*model.Key, error) {

@@ -3,6 +3,7 @@ package apiserver
 import (
 	"database/sql"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage/sqlstorage"
+	"github.com/gorilla/sessions"
 	"net/http"
 )
 
@@ -14,7 +15,8 @@ func Start(config *Config) error {
 
 	defer db.Close()
 	storage := sqlstorage.New(db)
-	s := newServer(storage)
+	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
+	s := newServer(storage, sessionStore)
 
 	return http.ListenAndServe(config.BindAddress, s)
 }

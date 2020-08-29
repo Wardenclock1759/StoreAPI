@@ -1,3 +1,4 @@
 bind_addr = ":8080"
 log_level = "debug"
 database_url = "host=localhost dbname=store_api_db user=User password=123456 sslmode=disable"
+session_key = "C6HZdNZnvcNzQPubAc1zCQQTrwhTo3jqJ9LQziezrAIX5dn9bDUWGPuESCxYYfGogZWTDoPVXBt62ZvwsZdC5lpOutJoR9MdsvKydMjsQXfyfYwkgaXZYx5puv9jYXyL43Vzirh9JHr0f3GMd8xHjLKyr9XNWQeWsSMA6sGy0AztAfHVnbKK2sH4Fi7KV1tI1LaEZX9vyJZec4lfusQRXG19zZQ3"

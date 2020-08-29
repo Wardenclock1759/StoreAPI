@@ -8,11 +8,12 @@ import (
 )
 
 type Storage struct {
-	db             *sql.DB
-	userRepository *UserRepository
-	roleRepository *RoleRepository
-	gameRepository *GameRepository
-	keyRepository  *KeyRepository
+	db                *sql.DB
+	userRepository    *UserRepository
+	roleRepository    *RoleRepository
+	gameRepository    *GameRepository
+	keyRepository     *KeyRepository
+	paymentRepository *PaymentRepository
 }
 
 func New(db *sql.DB) *Storage {
@@ -67,4 +68,16 @@ func (s *Storage) Key() storage.KeyRepository {
 	}
 
 	return s.keyRepository
+}
+
+func (s *Storage) Payment() storage.PaymentRepository {
+	if s.paymentRepository != nil {
+		return s.paymentRepository
+	}
+
+	s.paymentRepository = &PaymentRepository{
+		storage: s,
+	}
+
+	return s.paymentRepository
 }

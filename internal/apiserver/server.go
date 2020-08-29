@@ -10,7 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"net/http"
 	"os"
 	"time"
@@ -19,29 +21,34 @@ import (
 const (
 	ctxKeyUser ctxKey = iota
 	ctxKeyRequestID
+	sessionName = "KeyStore"
 )
 
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
 	ErrFailedToGenerateToken    = errors.New("failed to generate token string")
 	ErrFailedDecodeToken        = errors.New("failed to decode token")
+	ErrDuringPayment            = errors.New("failed payment attempt")
 	ErrForbidden                = errors.New("forbidden to proceed")
 	signedKey                   = []byte(os.Getenv("JWT_KEY"))
+	storeShare                  = []byte(os.Getenv("STORE_SHARE"))
 )
 
 type ctxKey int8
 
 type server struct {
-	router  *mux.Router
-	logger  *logrus.Logger
-	storage storage.Storage
+	router       *mux.Router
+	logger       *logrus.Logger
+	storage      storage.Storage
+	sessionStore sessions.Store
 }
 
-func newServer(storage storage.Storage) *server {
+func newServer(storage storage.Storage, sessions sessions.Store) *server {
 	s := &server{
-		router:  mux.NewRouter(),
-		logger:  logrus.New(),
-		storage: storage,
+		router:       mux.NewRouter(),
+		logger:       logrus.New(),
+		storage:      storage,
+		sessionStore: sessions,
 	}
 
 	s.configureRouter()
@@ -67,6 +74,8 @@ func (s *server) configureRouter() {
 
 	store := s.router.PathPrefix("/store").Subrouter()
 	store.Use(s.authorisedUser)
+	store.HandleFunc("/payment/session", s.handleCreateSession()).Methods("POST")
+	store.HandleFunc("/payment/procedure", s.handlePayment()).Methods("POST")
 
 	seller := store.PathPrefix("/publisher").Subrouter()
 	seller.Use(s.authorisedSeller)
@@ -189,6 +198,112 @@ func (s *server) authorisedSeller(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKeyUser, u)))
 	})
+}
+
+func (s *server) handlePayment() http.HandlerFunc {
+	type request struct {
+		CardNumber string `json:"card"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		email, ok := session.Values["email"]
+		if !ok {
+			s.error(w, r, http.StatusUnprocessableEntity, nil)
+		}
+		gameName, ok := session.Values["game"]
+		if !ok {
+			s.error(w, r, http.StatusUnprocessableEntity, nil)
+		}
+		price, ok := session.Values["price"]
+		if !ok {
+			s.error(w, r, http.StatusUnprocessableEntity, nil)
+		}
+		key, ok := session.Values["key"]
+		if !ok {
+			s.error(w, r, http.StatusUnprocessableEntity, nil)
+		}
+		seller, ok := session.Values["seller"]
+		if !ok {
+			s.error(w, r, http.StatusUnprocessableEntity, nil)
+		}
+
+		payment := &model.Payment{
+			UserEmail:   cast.ToString(email),
+			SellerEmail: cast.ToString(seller),
+			Total:       cast.ToInt(price),
+			GameName:    cast.ToString(gameName),
+			Card:        cast.ToString(req.CardNumber),
+			Code:        cast.ToString(key),
+		}
+
+		err = s.storage.Payment().Make(payment)
+		if err != nil {
+			s.error(w, r, http.StatusNotAcceptable, err)
+		}
+	}
+}
+
+func (s *server) handleCreateSession() http.HandlerFunc {
+	type request struct {
+		Game  uuid.UUID `json:"game_id"`
+		Email string    `json:"email"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		g, err := s.storage.Game().FindByID(req.Game)
+		if err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		u, err := s.storage.User().FindByID(g.User)
+		if err != nil {
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		k, err := s.storage.Key().FindByGame(req.Game)
+		if err != nil {
+			s.error(w, r, http.StatusNoContent, err)
+			return
+		}
+
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		session.Values["email"] = req.Email
+		session.Values["game"] = g.Name
+		session.Values["seller"] = u.Email
+		session.Values["price"] = g.Price
+		session.Values["key"] = k
+		session.Options.MaxAge = 300 // 5 minutes
+		if err := s.sessionStore.Save(r, w, session); err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusCreated, nil)
+	}
 }
 
 func (s *server) handleUserCreate() http.HandlerFunc {
@@ -334,7 +449,7 @@ func (s *server) handleGameCreate() http.HandlerFunc {
 		g := &model.Game{
 			Name:  req.Name,
 			Price: req.Price,
-			User:  req.User.String(),
+			User:  req.User,
 		}
 		if err := s.storage.Game().Create(g); err != nil {
 			s.error(w, r, http.StatusUnprocessableEntity, err)

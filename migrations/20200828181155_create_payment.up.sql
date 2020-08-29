@@ -4,5 +4,6 @@ CREATE TABLE "payment" (
     game_name varchar NOT NULL,
     user_email varchar NOT NULL,
     seller_email varchar NOT NULL,
-    total int NOT NULL
+    total int NOT NULL,
+    code string NOT NULL
 );

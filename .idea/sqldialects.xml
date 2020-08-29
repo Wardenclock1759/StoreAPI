@@ -11,7 +11,7 @@
     <file url="file://$PROJECT_DIR$/migrations/20200826134715_create_games.up.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20200826134716_create_keys.down.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20200826134716_create_keys.up.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/migrations/20200828181155_create_session.down.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/migrations/20200828181155_create_session.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/20200828181155_create_payment.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/20200828181155_create_payment.up.sql" dialect="GenericSQL" />
   </component>
 </project>

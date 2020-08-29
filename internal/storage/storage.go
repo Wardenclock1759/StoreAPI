@@ -5,4 +5,5 @@ type Storage interface {
 	Role() RoleRepository
 	Game() GameRepository
 	Key() KeyRepository
+	Payment() PaymentRepository
 }
