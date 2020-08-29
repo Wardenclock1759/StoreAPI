@@ -5,5 +5,5 @@ CREATE TABLE "payment" (
     user_email varchar NOT NULL,
     seller_email varchar NOT NULL,
     total int NOT NULL,
-    code string NOT NULL
+    code varchar NOT NULL
 );
