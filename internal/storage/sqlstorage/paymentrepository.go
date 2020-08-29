@@ -3,7 +3,12 @@ package sqlstorage
 import (
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
+	"os"
 	"unicode"
+)
+
+var (
+	storeShare = []byte(os.Getenv("STORE_SHARE"))
 )
 
 type PaymentRepository struct {
@@ -13,6 +18,11 @@ type PaymentRepository struct {
 func (r *PaymentRepository) Make(p *model.Payment) error {
 	if !valid(p.Code) {
 		return storage.ErrCardIsInvalid
+	}
+
+	err := p.PostCreate()
+	if err != nil {
+		return err
 	}
 
 	return nil

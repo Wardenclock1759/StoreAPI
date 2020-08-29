@@ -15,3 +15,8 @@ type Payment struct {
 	Total       int       `json:"total"`
 	Code        string    `json:"code"`
 }
+
+func (p *Payment) PostCreate() error {
+	p.ID = uuid.New()
+	return nil
+}

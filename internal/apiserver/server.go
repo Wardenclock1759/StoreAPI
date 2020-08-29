@@ -31,7 +31,6 @@ var (
 	ErrDuringPayment            = errors.New("failed payment attempt")
 	ErrForbidden                = errors.New("forbidden to proceed")
 	signedKey                   = []byte(os.Getenv("JWT_KEY"))
-	storeShare                  = []byte(os.Getenv("STORE_SHARE"))
 )
 
 type ctxKey int8
@@ -221,22 +220,27 @@ func (s *server) handlePayment() http.HandlerFunc {
 		email, ok := session.Values["email"]
 		if !ok {
 			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			return
 		}
 		gameName, ok := session.Values["game"]
 		if !ok {
 			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			return
 		}
 		price, ok := session.Values["price"]
 		if !ok {
 			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			return
 		}
 		key, ok := session.Values["key"]
 		if !ok {
 			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			return
 		}
 		seller, ok := session.Values["seller"]
 		if !ok {
 			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			return
 		}
 
 		payment := &model.Payment{
@@ -250,8 +254,27 @@ func (s *server) handlePayment() http.HandlerFunc {
 
 		err = s.storage.Payment().Make(payment)
 		if err != nil {
-			s.error(w, r, http.StatusNotAcceptable, err)
+			s.error(w, r, http.StatusNotAcceptable, ErrDuringPayment)
+			return
 		}
+
+		g, err := s.storage.Game().FindByName(cast.ToString(gameName))
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		k := &model.Key{
+			ID:  g.ID,
+			Key: cast.ToString(key),
+		}
+		err = s.storage.Key().Delete(k)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		s.respond(w, r, http.StatusAccepted, nil)
 	}
 }
 
