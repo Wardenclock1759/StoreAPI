@@ -23,7 +23,7 @@ func Start(config *Config) error {
 	var dynamicPort string
 	port := os.Getenv("PORT")
 	if port != "" {
-		dynamicPort = port
+		dynamicPort = ":" + port
 	} else {
 		dynamicPort = config.BindAddress
 	}
