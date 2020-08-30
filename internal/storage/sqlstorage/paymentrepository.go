@@ -111,8 +111,8 @@ func sendEmail(recipient string, message string) {
 	smtpPort := "587"
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	var err error
-	for err == nil {
-		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, []byte(message))
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, []byte(message))
+	if err != nil {
+
 	}
 }
