@@ -4,6 +4,7 @@ import (
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
 	"os"
+	"time"
 	"unicode"
 )
 
@@ -16,7 +17,7 @@ type PaymentRepository struct {
 }
 
 func (r *PaymentRepository) Make(p *model.Payment) error {
-	if !valid(p.Code) {
+	if !valid(p.Card) {
 		return storage.ErrCardIsInvalid
 	}
 
@@ -24,6 +25,17 @@ func (r *PaymentRepository) Make(p *model.Payment) error {
 	if err != nil {
 		return err
 	}
+
+	r.storage.db.QueryRow(
+		"INSERT INTO \"payment\" (id, time, game_name, user_email, seller_email, total, code) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		p.ID,
+		time.Now(),
+		p.GameName,
+		p.UserEmail,
+		p.SellerEmail,
+		p.Total,
+		p.Code,
+	)
 
 	return nil
 }
@@ -48,7 +60,7 @@ func valid(input string) bool {
 			val := int(r - '0')
 
 			if counter%2 == 1 {
-				val = (val * 2)
+				val = val * 2
 
 				if val > 9 {
 					val = val - 9

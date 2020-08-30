@@ -212,34 +212,34 @@ func (s *server) handlePayment() http.HandlerFunc {
 		}
 
 		session, err := s.sessionStore.Get(r, sessionName)
-		if err != nil {
-			s.error(w, r, http.StatusInternalServerError, err)
+		if err != nil || session.IsNew {
+			s.error(w, r, http.StatusInternalServerError, ErrDuringPayment)
 			return
 		}
 
 		email, ok := session.Values["email"]
 		if !ok {
-			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			s.error(w, r, http.StatusUnprocessableEntity, ErrDuringPayment)
 			return
 		}
 		gameName, ok := session.Values["game"]
 		if !ok {
-			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			s.error(w, r, http.StatusUnprocessableEntity, ErrDuringPayment)
 			return
 		}
 		price, ok := session.Values["price"]
 		if !ok {
-			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			s.error(w, r, http.StatusUnprocessableEntity, ErrDuringPayment)
 			return
 		}
 		key, ok := session.Values["key"]
 		if !ok {
-			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			s.error(w, r, http.StatusUnprocessableEntity, ErrDuringPayment)
 			return
 		}
 		seller, ok := session.Values["seller"]
 		if !ok {
-			s.error(w, r, http.StatusUnprocessableEntity, nil)
+			s.error(w, r, http.StatusUnprocessableEntity, ErrDuringPayment)
 			return
 		}
 
@@ -320,6 +320,7 @@ func (s *server) handleCreateSession() http.HandlerFunc {
 		session.Values["price"] = g.Price
 		session.Values["key"] = k
 		session.Options.MaxAge = 300 // 5 minutes
+		session.Options.HttpOnly = true
 		if err := s.sessionStore.Save(r, w, session); err != nil {
 			s.error(w, r, http.StatusInternalServerError, err)
 			return
