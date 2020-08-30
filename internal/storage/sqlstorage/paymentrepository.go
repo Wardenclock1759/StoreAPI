@@ -1,9 +1,9 @@
 package sqlstorage
 
 import (
-	"fmt"
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
+	"github.com/spf13/cast"
 	"net/smtp"
 	"os"
 	"time"
@@ -40,8 +40,8 @@ func (r *PaymentRepository) Make(p *model.Payment) error {
 	)
 
 	// Sender data.
-	from := fmt.Sprintf("%s", os.Getenv("EMAIL"))
-	password := fmt.Sprintf("<%s>", os.Getenv("EMAIL_PASSWORD"))
+	from := cast.ToString(os.Getenv("EMAIL"))
+	password := cast.ToString(os.Getenv("EMAIL_PASSWORD"))
 
 	// Receiver email address.
 	to := []string{

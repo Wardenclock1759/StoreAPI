@@ -254,7 +254,7 @@ func (s *server) handlePayment() http.HandlerFunc {
 
 		err = s.storage.Payment().Make(payment)
 		if err != nil {
-			s.error(w, r, http.StatusNotAcceptable, ErrDuringPayment)
+			s.error(w, r, http.StatusNotAcceptable, err)
 			return
 		}
 
