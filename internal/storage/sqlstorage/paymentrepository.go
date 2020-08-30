@@ -1,8 +1,10 @@
 package sqlstorage
 
 import (
+	"fmt"
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
+	"net/smtp"
 	"os"
 	"time"
 	"unicode"
@@ -36,6 +38,31 @@ func (r *PaymentRepository) Make(p *model.Payment) error {
 		p.Total,
 		p.Code,
 	)
+
+	// Sender data.
+	from := fmt.Sprintf("%s", os.Getenv("EMAIL"))
+	password := fmt.Sprintf("<%s>", os.Getenv("EMAIL_PASSWORD"))
+
+	// Receiver email address.
+	to := []string{
+		"mishakukarkin@mail.ru",
+	}
+
+	// smtp server configuration.
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	// Message.
+	message := []byte("This is a test email message.")
+
+	// Authentication.
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	// Sending email.
+	err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
