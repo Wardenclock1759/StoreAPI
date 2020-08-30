@@ -102,7 +102,7 @@ func valid(input string) bool {
 	return (sum % 10) == 0
 }
 
-func sendEmail(recipient string, message string) {
+func sendEmail(recipient string, messages string) {
 	from := cast.ToString(os.Getenv("EMAIL"))
 	password := cast.ToString(os.Getenv("EMAIL_PASSWORD"))
 
@@ -110,11 +110,12 @@ func sendEmail(recipient string, message string) {
 		recipient,
 	}
 
+	message := []byte("This is a test email message.")
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, []byte(message))
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
 	if err != nil {
 
 	}
