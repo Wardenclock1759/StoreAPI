@@ -41,7 +41,7 @@ func (r *PaymentRepository) Make(p *model.Payment) error {
 	)
 
 	var storeShare = cast.ToFloat32(os.Getenv("STORE_SHARE"))
-	var sellerShare = fmt.Sprintf("%.2f", storeShare*0.01*cast.ToFloat32(p.Total))
+	var sellerShare = fmt.Sprintf("%.2f", (1-storeShare)*0.01*cast.ToFloat32(p.Total))
 	messageForBuyer := "Thanks for purchase. Your key is: " + p.Code + "for"
 	sendEmail(cast.ToString(p.UserEmail), messageForBuyer)
 	fmt.Print(messageForBuyer)
