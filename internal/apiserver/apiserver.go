@@ -5,10 +5,12 @@ import (
 	"github.com/Wardenclock1759/StoreAPI/internal/storage/sqlstorage"
 	"github.com/gorilla/sessions"
 	"net/http"
+	"os"
 )
 
 func Start(config *Config) error {
-	db, err := newDB(config.DatabaseURL)
+	url := os.Getenv("DATABASE_URL")
+	db, err := newDB(url)
 	if err != nil {
 		return err
 	}
