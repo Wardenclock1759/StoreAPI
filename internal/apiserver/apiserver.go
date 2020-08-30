@@ -20,7 +20,14 @@ func Start(config *Config) error {
 	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
 	s := newServer(storage, sessionStore)
 
-	return http.ListenAndServe(config.BindAddress, s)
+	var dynamicPort string
+	port := os.Getenv("PORT")
+	if port != "" {
+		dynamicPort = port
+	} else {
+		dynamicPort = config.BindAddress
+	}
+	return http.ListenAndServe(dynamicPort, s)
 }
 
 func newDB(databaseURL string) (*sql.DB, error) {
