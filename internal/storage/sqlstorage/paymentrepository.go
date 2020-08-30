@@ -1,6 +1,7 @@
 package sqlstorage
 
 import (
+	"fmt"
 	"github.com/Wardenclock1759/StoreAPI/internal/model"
 	"github.com/Wardenclock1759/StoreAPI/internal/storage"
 	"github.com/spf13/cast"
@@ -39,30 +40,15 @@ func (r *PaymentRepository) Make(p *model.Payment) error {
 		p.Code,
 	)
 
-	// Sender data.
-	from := cast.ToString(os.Getenv("EMAIL"))
-	password := cast.ToString(os.Getenv("EMAIL_PASSWORD"))
-
-	// Receiver email address.
-	to := []string{
-		"mishakukarkin@mail.ru",
-	}
-
-	// smtp server configuration.
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	// Message.
-	message := []byte("This is a test email message.")
-
-	// Authentication.
-	auth := smtp.PlainAuth("", from, password, smtpHost)
-
-	// Sending email.
-	err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
-	if err != nil {
-		return err
-	}
+	var storeShare = cast.ToFloat32(os.Getenv("STORE_SHARE"))
+	var sellerShare = fmt.Sprintf("%.2f", storeShare*0.01*cast.ToFloat32(p.Total))
+	go sendEmail(cast.ToString(p.UserEmail), "Thanks for purchase. Your key is: "+cast.ToString(p.Code)+"for"+cast.ToString(p.Total))
+	go sendEmail(cast.ToString(p.UserEmail),
+		"User: "+cast.ToString(p.UserEmail)+
+			"bought "+cast.ToString(p.GameName)+
+			"for"+cast.ToString(p.Total)+
+			". Your share is "+
+			cast.ToString(sellerShare))
 
 	return nil
 }
@@ -111,4 +97,22 @@ func valid(input string) bool {
 	}
 
 	return (sum % 10) == 0
+}
+
+func sendEmail(recipient string, message string) {
+	from := cast.ToString(os.Getenv("EMAIL"))
+	password := cast.ToString(os.Getenv("EMAIL_PASSWORD"))
+
+	to := []string{
+		recipient,
+	}
+
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	var err error
+	for err == nil {
+		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, []byte(message))
+	}
 }
