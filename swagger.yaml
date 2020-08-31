@@ -70,10 +70,6 @@ definitions:
         type: string
     required:
       - card
-info:
-  description: Documentation for News API
-  title: of News API
-  version: 1.0.0
 paths:
   /user/sign-up:
     post:
@@ -164,12 +160,10 @@ paths:
     post:
       description: create session cookie
       parameters:
-        - description: uuid of like to get or delete article-user pair from storage
-          in: path
-          name: id
+         - in: header
+          name: Set-Cookie
           required: true
           type: string
-          x-go-name: ID
       responses:
         "200":
           $ref: '#/responses/noContent'
