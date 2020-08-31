@@ -8,7 +8,6 @@ definitions:
         description: user email
         type: string
       password:
-        descriprion: user password
         type: string
     required:
       - email
@@ -18,11 +17,10 @@ definitions:
     properties:
       id:
         description: user id, to which you want to atach the role
-        type: uuid
+        type: string
       role:
         description: one of the existing roles in string format
         type: string
-        enum: [seller]
     required:
       - id
       - role
@@ -36,7 +34,7 @@ definitions:
         type: string
       id:
         description: seller id
-        type: uuid
+        type: string
     required:
       - name
       - price
@@ -45,7 +43,7 @@ definitions:
     properties:
       id:
         description: game id, which code belongs to
-        type: uuid
+        type: string
       code:
         description: code itself
         type: string
@@ -56,7 +54,7 @@ definitions:
     properties:
       id:
         description: game id, which customer wants to buy
-        type: uuid
+        type: string
       email:
         description: customer email
         type: string
@@ -70,19 +68,15 @@ definitions:
         type: string
     required:
       - card
+info:
+  description: Documentation for News API
+  title: of News API
+  version: 1.0.0
 paths:
   /user/sign-up:
     post:
       description: user stores his info into db
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: 'definitions/User'
-            example:
-              email: valid@email.com
-              password: somepassword
+
       responses:
         "201":
           $ref: '#/responses/whoami'
@@ -93,43 +87,24 @@ paths:
   /user/sign-in:
     post:
       description: user tries to login and recieves jwt token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: 'definitions/User'
-            example:
-              email: valid@email.com
-              password: somepassword
       responses:
         "200":
-          headers:
-            Token:
-              schema:
-                type: string
-              description: JWT token that stores user info
+          $ref: '#/responses/error'
         "401":
-          description: no such user in db
           $ref: '#/responses/error'
         "400":
-          description: error while decoding request
           $ref: '#/responses/error'
         "500":
-          description: error while generating JWT token on valid user info
           $ref: '#/responses/error'
   /user/role/grant-role:
     post:
       description: grant role to authorised user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: 'definitions/Role'
-            example:
-              id: f07d2690-eb6c-11ea-adc1-0242ac120002
-              role: seller
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
       responses:
         "201":
           $ref: '#/responses/getRole'
@@ -140,15 +115,12 @@ paths:
   /user/role/revoke-role:
     post:
       description: remove role from user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: 'definitions/Role'
-            example:
-              id: f07d2690-eb6c-11ea-adc1-0242ac120002
-              role: seller
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
       responses:
         "200":
           $ref: '#/responses/getRole'
@@ -162,98 +134,158 @@ paths:
       parameters:
         - description: jwt token
           in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+  /store/payment/procedure:
+    post:
+      description: create session cookie
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+        - description: session cookie
+          in: header
           name: Set-Cookie
           required: true
           type: string
       responses:
         "200":
           $ref: '#/responses/noContent'
+  /publisher/game:
+    post:
+      description: post game
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "201":
+          $ref: '#/responses/game'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+  /publisher/key:
+    post:
+      description: post key
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "201":
+          $ref: '#/responses/key'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+    delete:
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+  /private/whoami:
+    get:
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "201":
+          $ref: '#/responses/whoami'
+  /private/roles:
+    get:
+      parameters:
+        - description: jwt token
+          in: header
+          name: Token
+          required: true
+          type: string
+      responses:
+        "201":
+          $ref: '#/responses/getRole'
 produces:
   - application/json
 responses:
   whoami:
     description: returns user info
     schema:
-      user:
-        type: object
-        properties:
-          id:
-            description: user id
-            type: uuid
-          email:
-            description: user email
-            type: string
-      example:
-        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-        email: valid@email.com
+      properties:
+        id:
+          description: user id
+          type: string
+        email:
+          description: user email
+          type: string
   getRole:
     description: return all user roles if any
     schema:
-      role:
-        type: object
-        properties:
-          id:
-            description: user id
-            type: uuid
-          role:
-            description: user role
-            type: string
-      example:
-        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-        role: seller
+      properties:
+        id:
+          description: user id
+          type: string
+        role:
+          description: user role
+          type: string
   game:
     description: return game info
     schema:
-      Game:
-        type: object
-        properties:
-          id:
-            description: game id
-            type: uuid
-          name:
-            description: game name
-            type: string
-          price:
-            description: game price
-            type: string
-          user:
-            description: seller id
-            type: uuid
-    example:
-      id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-      name: Naruto Online
-      price: 1000
-      user: f07d2690-eb6c-11ea-adc1-0242ac120002
+      properties:
+        id:
+          description: game id
+          type: string
+        name:
+          description: game name
+          type: string
+        price:
+          description: game price
+          type: string
+        user:
+          description: seller id
+          type: string
   key:
     description: return key info
     schema:
-      key:
-        type: object
-        properties:
-          id:
-            description: game id, which code belongs to
-            type: uuid
-          code:
-            description: code itself
-            type: string
-    example:
-      id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-      code: xxxx-xxxx-xxxx-xxxx
+      properties:
+        id:
+          description: game id, which code belongs to
+          type: string
+        code:
+          description: code itself
+          type: string
   noContent:
     description: Response with empty body
   error:
     description: return error and message
-      schema:
-        Error:
-          type: object
-          properties:
-            title:
-              description: error
-              enum: [error]
-              type: string
-            message:
-              description: error message
-              type: string
+    schema:
+      properties:
+        title:
+          description: error
+          type: string
+        message:
+          description: error message
+          type: string
 schemes:
   - http
 swagger: "2.0"
