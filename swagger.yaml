@@ -69,8 +69,8 @@ definitions:
     required:
       - card
 info:
-  description: Documentation for News API
-  title: of News API
+  description: Documentation for Store API
+  title: of store API
   version: 1.0.0
 paths:
   /user/sign-up:
