@@ -1,0 +1,255 @@
+basePath: /
+consumes:
+  - application/json
+definitions:
+  User:
+    properties:
+      email:
+        description: user email
+        type: string
+      password:
+        descriprion: user password
+        type: string
+    required:
+      - email
+      - password
+    type: object
+  Role:
+    properties:
+      id:
+        description: user id, to which you want to atach the role
+        type: uuid
+      role:
+        description: one of the existing roles in string format
+        type: string
+        enum: [seller]
+    required:
+      - id
+      - role
+  Game:
+    properties:
+      name:
+        description: game name. must be unique to the db1
+        type: string
+      price:
+        description: game price in dollars
+        type: string
+      id:
+        description: seller id
+        type: uuid
+    required:
+      - name
+      - price
+      - id
+  Key:
+    properties:
+      id:
+        description: game id, which code belongs to
+        type: uuid
+      code:
+        description: code itself
+        type: string
+    required:
+      - id
+      - code
+  PaymentSession:
+    properties:
+      id:
+        description: game id, which customer wants to buy
+        type: uuid
+      email:
+        description: customer email
+        type: string
+    required:
+      - id
+      - email
+  PaymentProcedure:
+    properties:
+      card:
+        description: card number
+        type: string
+    required:
+      - card
+info:
+  description: Documentation for News API
+  title: of News API
+  version: 1.0.0
+paths:
+  /user/sign-up:
+    post:
+      description: user stores his info into db
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: 'definitions/User'
+            example:
+              email: valid@email.com
+              password: somepassword
+      responses:
+        "201":
+          $ref: '#/responses/whoami'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+  /user/sign-in:
+    post:
+      description: user tries to login and recieves jwt token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: 'definitions/User'
+            example:
+              email: valid@email.com
+              password: somepassword
+      responses:
+        "200":
+          headers:
+            Token:
+              schema:
+                type: string
+              description: JWT token that stores user info
+        "401":
+          description: no such user in db
+          $ref: '#/responses/error'
+        "400":
+          description: error while decoding request
+          $ref: '#/responses/error'
+        "500":
+          description: error while generating JWT token on valid user info
+          $ref: '#/responses/error'
+  /user/role/grant-role:
+    post:
+      description: grant role to authorised user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: 'definitions/Role'
+            example:
+              id: f07d2690-eb6c-11ea-adc1-0242ac120002
+              role: seller
+      responses:
+        "201":
+          $ref: '#/responses/getRole'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+  /user/role/revoke-role:
+    post:
+      description: remove role from user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: 'definitions/Role'
+            example:
+              id: f07d2690-eb6c-11ea-adc1-0242ac120002
+              role: seller
+      responses:
+        "200":
+          $ref: '#/responses/getRole'
+        "422":
+          $ref: '#/responses/error'
+        "400":
+          $ref: '#/responses/error'
+  /store/payment/session:
+    post:
+      description: create session cookie
+      parameters:
+        - description: uuid of like to get or delete article-user pair from storage
+          in: path
+          name: id
+          required: true
+          type: string
+          x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/noContent'
+produces:
+  - application/json
+responses:
+  whoami:
+    description: returns user info
+    schema:
+      id:
+        description: user id
+        type: uuid
+      email:
+        description: user email
+        type: string
+      example:
+        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+        email: valid@email.com
+  getRole:
+    description: return all user roles if any
+    schema:
+      id:
+        description: user id
+        type: uuid
+      role:
+        description: user role
+        type: string
+      example:
+        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+        role: seller
+  game:
+    description: return game info
+    schema:
+      Game:
+        type: object
+        properties:
+          id:
+            description: game id
+            type: uuid
+          name:
+            description: game name
+            type: string
+          price:
+            description: game price
+            type: string
+          user:
+            description: seller id
+            type: uuid
+    example:
+      id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+      name: Naruto Online
+      price: 1000
+      user: f07d2690-eb6c-11ea-adc1-0242ac120002
+  key:
+    description: return key info
+    schema:
+      id:
+        description: game id, which code belongs to
+        type: uuid
+      code:
+        description: code itself
+        type: string
+    example:
+      id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+      code: xxxx-xxxx-xxxx-xxxx
+  noContent:
+    description: Response with empty body
+  error:
+    description: return error and message
+      schema:
+        Error:
+          type: object
+          properties:
+            title:
+              description: error
+              enum: [error]
+              type: string
+            message:
+              description: error message
+              type: string
+schemes:
+  - http
+swagger: "2.0"
