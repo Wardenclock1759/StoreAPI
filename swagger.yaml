@@ -173,27 +173,31 @@ responses:
   whoami:
     description: returns user info
     schema:
-      id:
-        description: user id
-        type: uuid
-      email:
-        description: user email
-        type: string
-      example:
-        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-        email: valid@email.com
+      user:
+        type: object
+        id:
+          description: user id
+          type: uuid
+          email:
+            description: user email
+            type: string
+          example:
+            id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+            email: valid@email.com
   getRole:
     description: return all user roles if any
     schema:
-      id:
-        description: user id
-        type: uuid
       role:
-        description: user role
-        type: string
-      example:
-        id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
-        role: seller
+        type: object
+        id:
+          description: user id
+          type: uuid
+          role:
+            description: user role
+            type: string
+          example:
+            id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
+            role: seller
   game:
     description: return game info
     schema:
@@ -220,12 +224,14 @@ responses:
   key:
     description: return key info
     schema:
-      id:
-        description: game id, which code belongs to
-        type: uuid
-      code:
-        description: code itself
-        type: string
+      key:
+        type: object
+        id:
+          description: game id, which code belongs to
+          type: uuid
+          code:
+            description: code itself
+            type: string
     example:
       id: 9fa559cc-eb6c-11ea-adc1-0242ac120002
       code: xxxx-xxxx-xxxx-xxxx
