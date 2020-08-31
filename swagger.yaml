@@ -160,7 +160,8 @@ paths:
     post:
       description: create session cookie
       parameters:
-         - in: header
+        - description: jwt token
+          in: header
           name: Set-Cookie
           required: true
           type: string
